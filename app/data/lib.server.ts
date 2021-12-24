@@ -1,3 +1,4 @@
+// ============== declare types ===================
 
 // direct publisher video entry
 export type Video = {
@@ -23,34 +24,18 @@ export type Movie = {
   }
 }
 
-// direct publisher ShortFormVideo entry
-export type ShortFormVideo = {
-  id: number
-  title: string
-  shortDescription: string
-  thumbnail: string
-  releaseDate: Date
-  genres: string[]
-  tags: string[]
-  content: {
-    dateAdded: Date
-    duration: number
-    videos: Video[]
-  }
-}
-
-// direct publisher
+// roku direct publisher feed
 export type DirectPublisher = {
   providerName: string,
   lastUpdated:  string, //Date,
   language: string,
-  shortFormVideos?: ShortFormVideo[],
-  movies?: Movie[]
+  shortFormVideos: Movie[],
+  movies: Movie[]
 }
 
 // vimeo direct publisher result
-type VimeoDirectPublisherResult = {
-  name: string,
+type ShowcaseDirectPublisherResult = {
+  entry: ShowcaseEntry,
   publisher: DirectPublisher
 }
 
@@ -61,26 +46,41 @@ type ShowcaseEntry = {
   roku: string
 }
 
+// ======================== public functions =========================
 
-// retrieve vimeoshowcase entry
-const getShowcaseEntry = (id:number): ShowcaseEntry | undefined => {
-  return getVimeoShowCases().find(s => s.id === id)
+// generate directpublisher feed from vimeo showcases
+export const generateDirectPublisherFeed = async (): Promise<DirectPublisher> => {
+  // declare direct publisher result
+  let publisher:DirectPublisher = {
+    providerName: 'James McAnespy',
+    lastUpdated: new Date().toISOString(),
+    language: 'en',
+    movies: [],
+    shortFormVideos: []
+  }
+
+  // retrive the list of vimeo showcases to add to the publisher feed
+  const showcases = getVimeoShowCases()
+
+  // fetch all vimeo showcase directpublisher results in parallel
+  const results:ShowcaseDirectPublisherResult[] = await Promise.all(
+    showcases.map( (s:ShowcaseEntry) => getDirectPublisherForShowcase(s) )
+  )
+
+  // reduce each showcase directpublisher result into single Directpublisher feed
+  publisher = results.reduce((pub:DirectPublisher, showcase:ShowcaseDirectPublisherResult) => updateDirectPublisher(showcase, pub), publisher)
+  return publisher
 }
 
-const getShowcaseById = async (id:number): Promise<DirectPublisher> => {
-  const roku = getShowcaseEntry(id)?.roku || ''
+// ==================== private utility functions ====================
 
-  const url = `https://vimeo.com/showcase/${id}/feed/roku/${roku}`
+// retrieve a direct publisher feed for vimeo showcase
+const getDirectPublisherForShowcase = async (entry:ShowcaseEntry): Promise<ShowcaseDirectPublisherResult> => {
+  const url = `https://vimeo.com/showcase/${entry.id}/feed/roku/${entry.roku}`
   const resp = await fetch(url)
-  const json = await resp.json()
-  return json
-}
-
-// vimeo showcase name and roku direct publisher feed 
-const getDirectPublisherResultForShowcase = async (id:number, name: string): Promise<VimeoDirectPublisherResult> => {
-  const publisher = await getShowcaseById(id)
+  const publisher = await resp.json()
   return {
-    name,
+    entry,
     publisher
   }
 }
@@ -91,51 +91,32 @@ const addMoviesFromShowcase = (showcaseName:string, showcaseMovies:Movie[], movi
   // process each movie in showcase
   for (let scMovie of showcaseMovies) {
     // find movie in existing movie list
-    const pos = movies.findIndex(m => m.id===scMovie.id)
-   
-    // if movie not found add to movie list and add showcase name to movie tags
+    const pos = movies.findIndex(m => m.id===scMovie.id)    
     if (pos == -1 ) {    
-        if (scMovie.tags.indexOf(showcaseName)==-1) scMovie.tags.push(showcaseName);
-        movies = movies.concat(scMovie)
+      // movie not found add showcase name to movie tags and add movie to movie list
+      if (scMovie.tags.indexOf(showcaseName)==-1) scMovie.tags.push(showcaseName);
+      movies = movies.concat(scMovie)
     } else {
+      // movie found so add showcase name to movie tags
       if (movies[pos].tags.indexOf(showcaseName)==-1) movies[pos].tags.push(showcaseName);
     }
   }
   return movies;
 }
 
-// generate directpublisher feed from vimeo showcases
-export const generateDirectPublisherFeed = async (): Promise<DirectPublisher> => {
-  let movies: any[] = []
-  let short: any[] = []
-
-  // retrive the list of vimeo showcases to add to the publisher feed
-  const showcases = getVimeoShowCases()
-
-  // fetch all vimeo showcase directpublisher results in parallel
-  const results:VimeoDirectPublisherResult[] = await Promise.all(
-    showcases.map( (s:ShowcaseEntry) => getDirectPublisherResultForShowcase(s.id, s.name) )
-  )
-
-  // process each showcase result adding movies to Directpublisher feed
-  for( let result of results) {
-    if (result.publisher.shortFormVideos) {
-      movies = addMoviesFromShowcase(result.name, result.publisher.shortFormVideos, movies)
-      console.log('shortFormVideos', result.name, result.publisher.shortFormVideos?.length,'total', movies.length) //, show.shortFormVideos.map(s => s.id))
-    }
-    if (result.publisher.movies) {
-      movies = addMoviesFromShowcase(result.name, result.publisher.movies, movies)
-      console.log('movies', result.name, result.publisher.movies?.length, 'total', movies.length) //, show.movies.map(m => m.id)) 
-    }
+// update DirectPublisher with ShowcaseDirectPublisher result
+const updateDirectPublisher = (showcase: ShowcaseDirectPublisherResult, publisher: DirectPublisher) : DirectPublisher => {
+  // check if showcase direct publisher contains short form videos
+  if (showcase.publisher.shortFormVideos) {
+    publisher.shortFormVideos = addMoviesFromShowcase(showcase.entry.name, showcase.publisher.shortFormVideos, publisher.shortFormVideos)
+    console.log('shortFormVideos', showcase.entry.name, showcase.publisher.shortFormVideos?.length,'total', publisher.movies.length)
   }
-  return  { 
-    providerName: 'James McAnespy',
-    lastUpdated: new Date().toISOString(),
-    language: 'en',
-    movies: movies,
-    shortFormVideos: short
-  } 
-
+  // check if showcase direct publisher contains movies
+  if (showcase.publisher.movies) {
+    publisher.movies = addMoviesFromShowcase(showcase.entry.name, showcase.publisher.movies, publisher.movies)
+    console.log('movies', showcase.entry.name, showcase.publisher.movies?.length, 'total', publisher.movies.length)
+  }
+  return publisher
 }
 
 // list of showcases published on Vimeo
