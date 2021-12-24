@@ -1,9 +1,9 @@
 
 import { LoaderFunction, json } from 'remix'
-import { loadShowcases } from '~/data/lib'
+import { generateDirectPublisherFeed } from '~/data/lib.server'
 
-export const loader: LoaderFunction = async () => {
-  const showcase = await loadShowcases()
-  return json(showcase)
+export const loader: LoaderFunction = async () => {  
+  const feed = await generateDirectPublisherFeed()
+  return json(feed)
 }
 
