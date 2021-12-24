@@ -1,34 +1,17 @@
-# Welcome to Remix!
+# Vimeo Showcase to Direct Publisher Feed Aggregator
 
-- [Remix Docs](https://remix.run/docs)
+## Purpose
 
-## Deployment
+Allows multiple Vimeo Showcases to be aggregated into a DirectPublisher Feed. Videos in each showcase have the showcase name added as a video tag in the final Direct Publisher Feed
 
-After having run the `create-remix` command and selected "Vercel" as a deployment target, you only need to [import your Git repository](https://vercel.com/new) into Vercel, and it will be deployed.
+### Operation
 
-If you'd like to avoid using a Git repository, you can also deploy the directory by running [Vercel CLI](https://vercel.com/cli):
+Vimeo Showcases include a Roku Direct Publisher feed Url which takes the following form
 
-```sh
-npm i -g vercel
-vercel
+```html
+https://vimeo.com/showcase/{id}/feed/roku/{roku}`
 ```
 
-It is generally recommended to use a Git repository, because future commits will then automatically be deployed by Vercel, through its [Git Integration](https://vercel.com/docs/concepts/git).
+where ```{id}``` is the showcase identifier and ```{roku}``` is the unique roku label
 
-## Development
-
-To run your Remix app locally, make sure your project's local dependencies are installed:
-
-```sh
-npm install
-```
-
-Afterwards, start the Remix development server like so:
-
-```sh
-npm run dev
-```
-
-Open up [http://localhost:3000](http://localhost:3000) and you should be ready to go!
-
-If you're used to using the `vercel dev` command provided by [Vercel CLI](https://vercel.com/cli) instead, you can also use that, but it's not needed.
+The application is configured with one or more Vimeo showcase entries then aggregates each DirectPublisher feed into a single aggregated feed. Each video in vimeo showcase has the showcase name added as a tag in the final aggregated feed to allow showcase names to be used as Roku categories.
