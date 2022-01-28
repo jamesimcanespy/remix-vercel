@@ -1,3 +1,5 @@
+import showcases from './showcases.server.json';
+
 // ============== declare types ===================
 
 // direct publisher video entry
@@ -121,17 +123,5 @@ const updateDirectPublisher = (showcase: ShowcaseDirectPublisherResult, publishe
 
 // list of showcases published on Vimeo
 export const getVimeoShowCases = () : ShowcaseEntry[] => {
-  return [ 
-    { id: 8982324, roku: 'f6b8757fea', name: 'Place'},
-    { id: 8721204, roku: '89a270df1c', name: 'Drama'},
-    { id: 8501222, roku: '71d386c098', name: 'Chats'},
-    { id: 8379104, roku: '3209eecaf6', name: 'Sport'},
-    { id: 8139461, roku: 'db1f402180', name: 'Cuisine'},
-    { id: 8139225, roku: '320d714527', name: 'Comedy'},
-    { id: 8129575, roku: 'a6f185f893', name: 'Editorial'},
-    { id: 8116301, roku: '56c931dca2', name: 'Music'},
-    //{ id: 8116289, roku: 'badbe9d735', name: 'Frontier Pictures'},
-    { id: 8111312, roku: '4a6071e726', name: 'Factual'},
-    { id: 8110962, roku: '307a40bc51', name: 'History'}
-  ]
+  return showcases
 }
