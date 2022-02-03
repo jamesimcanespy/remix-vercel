@@ -96,12 +96,14 @@ const addMoviesFromShowcase = (showcaseName:string, showcaseMovies:Movie[], movi
     const pos = movies.findIndex(m => m.id===scMovie.id)    
     if (pos == -1 ) {    
       // movie not found add showcase name to movie tags and add movie to movie list
-      if (scMovie.tags.indexOf(showcaseName)==-1) scMovie.tags.push(showcaseName);
-      movies = movies.concat(scMovie)
+      scMovie.tags.push(showcaseName);
+      movies.push(scMovie)
     } else {
-      // movie found so add showcase name to movie tags
-      if (movies[pos].tags.indexOf(showcaseName)==-1) movies[pos].tags.push(showcaseName);
-    }
+      // movie found so add showcase name and showcasemovie tags to movie tags 
+      movies[pos].tags = movies[pos].tags.concat([showcaseName, ...scMovie.tags])
+      // remove duplicates
+      movies[pos].tags =  movies[pos].tags.filter((item, index) => movies[pos].tags.indexOf(item) === index)
+    }    
   }
   return movies;
 }
