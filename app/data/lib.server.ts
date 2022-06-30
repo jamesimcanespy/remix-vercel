@@ -54,7 +54,7 @@ type ShowcaseEntry = {
 export const generateDirectPublisherFeed = async (): Promise<DirectPublisher> => {
   // declare direct publisher result
   let publisher:DirectPublisher = {
-    providerName: 'James McAnespy',
+    providerName: 'TEST UPDATE',
     lastUpdated: new Date().toISOString(),
     language: 'en',
     movies: [],
