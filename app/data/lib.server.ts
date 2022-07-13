@@ -1,4 +1,5 @@
 import showcases from './showcases.server.json';
+import moviesWithAdBreaks from './movie.ads.json';
 
 // ============== declare types ===================
 
@@ -23,6 +24,7 @@ export type Movie = {
     dateAdded: Date
     duration: number
     videos: Video[]
+    adBreaks: String[]
   }
 }
 
@@ -38,14 +40,19 @@ export type DirectPublisher = {
 // vimeo direct publisher result
 type ShowcaseDirectPublisherResult = {
   entry: ShowcaseEntry,
-  publisher: DirectPublisher
+  publisherWithAdBreaks: DirectPublisher
 }
 
 // Vimeo showcase entry
 type ShowcaseEntry = {
-  id:number
+  id: number
   name: string
   roku: string
+}
+
+type MovieWithAdBreak = {
+  movieTitle: string,
+  movieAdBreaks: String[]
 }
 
 // ======================== public functions =========================
@@ -54,7 +61,7 @@ type ShowcaseEntry = {
 export const generateDirectPublisherFeed = async (): Promise<DirectPublisher> => {
   // declare direct publisher result
   let publisher:DirectPublisher = {
-    providerName: 'TEST UPDATE',
+    providerName: 'James McAnespy',
     lastUpdated: new Date().toISOString(),
     language: 'en',
     movies: [],
@@ -81,10 +88,47 @@ const getDirectPublisherForShowcase = async (entry:ShowcaseEntry): Promise<Showc
   const url = `https://vimeo.com/showcase/${entry.id}/feed/roku/${entry.roku}`
   const resp = await fetch(url)
   const publisher = await resp.json()
+  const publisherWithAdBreaks = insertAdBreaksInMovie(publisher)
   return {
     entry,
-    publisher
+    publisherWithAdBreaks
   }
+}
+
+// inserts the associated adBreaks with the movie title found in the movie.ads.json file
+const insertAdBreaksInMovie = (publisherWithAdBreaks: DirectPublisher) => {
+  // If publisher feed has a movies array
+  if (publisherWithAdBreaks.movies !== undefined) {
+    // Loop through each movie in the publisher movies array
+    publisherWithAdBreaks.movies.forEach(function(movie: Movie) {
+      // Search through the moviesWithAdBreaks array for the matching movie title
+      const movieHasAdBreaks = moviesWithAdBreaks.find(function(movieWithAdBreak: MovieWithAdBreak) {
+        return movieWithAdBreak.movieTitle === movie.title
+      })
+      // If the matching movie title is found within the moviesWithAdBreaks array then assign the associated adBreaks to the movie
+      if (movieHasAdBreaks) {
+        // adBreak value format = hh::mm::ss
+        movie.content.adBreaks = movieHasAdBreaks.movieAdBreaks
+      }
+    })
+  }
+  // If publisher response does not contain a movies key, then response must be for the shortFormVideos feed
+  else if (publisherWithAdBreaks.shortFormVideos !== undefined) {
+     // Loop through each movie in the publisher shortFormVideos array
+     publisherWithAdBreaks.shortFormVideos.forEach(function(movie: Movie) {
+      // Search through the moviesWithAdBreaks array for the matching movie title
+      const movieHasAdBreaks = moviesWithAdBreaks.find(function(movieWithAdBreak: MovieWithAdBreak) {
+        return movieWithAdBreak.movieTitle === movie.title
+      })
+      // If the matching movie title is found within the moviesWithAdBreaks array then assign the associated adBreaks to the movie
+      if (movieHasAdBreaks) {
+        // adBreak value format = hh::mm::ss
+        movie.content.adBreaks = movieHasAdBreaks.movieAdBreaks
+      }
+    })
+  }
+  // return updated publisher feed now with movies including adBreaks
+  return publisherWithAdBreaks
 }
 
 // add showcase movies to movie list and add showcase name to movie tags
@@ -111,14 +155,14 @@ const addMoviesFromShowcase = (showcaseName:string, showcaseMovies:Movie[], movi
 // update DirectPublisher with ShowcaseDirectPublisher result
 const updateDirectPublisher = (showcase: ShowcaseDirectPublisherResult, publisher: DirectPublisher) : DirectPublisher => {
   // check if showcase direct publisher contains short form videos
-  if (showcase.publisher.shortFormVideos) {
-    publisher.shortFormVideos = addMoviesFromShowcase(showcase.entry.name, showcase.publisher.shortFormVideos, publisher.shortFormVideos)
-    console.log('shortFormVideos', showcase.entry.name, showcase.publisher.shortFormVideos?.length,'total', publisher.movies.length)
+  if (showcase.publisherWithAdBreaks.shortFormVideos) {
+    publisher.shortFormVideos = addMoviesFromShowcase(showcase.entry.name, showcase.publisherWithAdBreaks.shortFormVideos, publisher.shortFormVideos)
+    console.log('shortFormVideos', showcase.entry.name, showcase.publisherWithAdBreaks.shortFormVideos?.length,'total', publisher.movies.length)
   }
   // check if showcase direct publisher contains movies
-  if (showcase.publisher.movies) {
-    publisher.movies = addMoviesFromShowcase(showcase.entry.name, showcase.publisher.movies, publisher.movies)
-    console.log('movies', showcase.entry.name, showcase.publisher.movies?.length, 'total', publisher.movies.length)
+  if (showcase.publisherWithAdBreaks.movies) {
+    publisher.movies = addMoviesFromShowcase(showcase.entry.name, showcase.publisherWithAdBreaks.movies, publisher.movies)
+    console.log('movies', showcase.entry.name, showcase.publisherWithAdBreaks.movies?.length, 'total', publisher.movies.length)
   }
   return publisher
 }
@@ -126,4 +170,9 @@ const updateDirectPublisher = (showcase: ShowcaseDirectPublisherResult, publishe
 // list of showcases published on Vimeo
 export const getVimeoShowCases = () : ShowcaseEntry[] => {
   return showcases
+}
+
+// list of movie titles and their adBreaks
+export const getMoviesWithAdBreaks = () : MovieWithAdBreak[] => {
+  return moviesWithAdBreaks
 }
