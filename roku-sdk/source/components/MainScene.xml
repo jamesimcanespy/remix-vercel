@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene" initialFocus="getNonceButton">
+<children>
+  <ButtonGroup>
+    <button text="Get Nonce" id="getNonceButton" />
+    <button text="Register Impression" id="registerImpressionButton" visible="false" />
+  </ButtonGroup>
+</children>
+<script type="text/brightscript">
+<![CDATA[
+  Function init()
+    m.getNonceButton = m.top.findNode("getNonceButton")
+    m.getNonceButton.observeField("buttonSelected", "getNonceButtonPressed")
+    m.getNonceButton.setFocus(true)
+
+    m.registerImpressionButton = m.top.findNode("registerImpressionButton")
+    m.registerImpressionButton.observeField("buttonSelected", "registerImpressionButtonPressed")
+
+    loadImaSdk()
+  End Function
+
+
+  ' Initialize SDK Interface component and attach callbacks to field observers
+  Function loadImaSdk() as Void
+    m.sdkTask = createObject("roSGNode", "PALInterface")
+    m.sdkTask.observeField("nonce", "onNonceLoaded")
+    print "Running load IMA task."
+    m.sdkTask.control = "RUN"
+  End Function
+
+
+  ' Callback triggered when Nonce is loaded
+  Sub onNonceLoaded(message as Object)
+    nonce = m.sdkTask.nonce
+    print "onNonceLoaded ";nonce
+    ' Only enable the "register impression" button once a nonce is loaded
+    m.registerImpressionButton.visible = true
+    m.registerImpressionButton.setFocus(true)
+
+    ' This functionality must occur after the nonce is retrieved, but
+    ' in most cases will not occur immediately, as stream information
+    ' will need to be retrieved from the DAI API, first. Implementation
+    ' of the DAI API is beyond the scope of this sample.
+    makeAdRequest(nonce)
+  End Sub
+
+  Sub makeAdRequest(nonce)
+    ' the publisher will need to retrieve the ad tag using the DAI API.
+    ' For the purposes of this sample, we will treat it as a known string.
+    adTag = "https://pubads.g.doubleclick.net/gampad/ads?iu=/124319096/external/single_ad_samples"
+
+
+    preparedTag = adTag + "&u_paln=" + nonce
+
+    ' this is where the publisher would implement their ad request logic
+    Print "ad tag with nonce ";preparedTag
+  End Sub
+
+
+  ' Action triggered when nonce button is pressed
+  Function getNonceButtonPressed() As Void
+    print "Get Nonce"
+    ' Inform the SDK Interface Component to request a nonce
+    m.sdkTask.getNonce = true
+  End Function
+
+
+  ' Action triggered when impression button is pressed
+  Function registerImpressionButtonPressed() As Void
+    print "Register Impression"
+    ' Inform the SDK Interface Component to register an impression
+    m.sdkTask.registerImpression = true
+  End Function
+]]>
+</script>
+</component>

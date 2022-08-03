@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PALInterface" extends="Task">
+<interface>
+  <!--Commands-->
+  <field id="getNonce" type="Boolean" />
+  <field id="registerImpression" type="Boolean" />
+  <!--Responses-->
+  <field id="nonce" type="String" />
+</interface>
+<script type = "text/brightscript">
+<![CDATA[
+  Library "IMA3.brs"
+
+  Sub init()
+    ' It is not possible to access roUrlTransfer on the main thread. Setting functionName to a
+    ' function and then setting control to "RUN" causes that function to run on a separate thread.
+    m.top.functionName = "initNonceLoader"
+    m.top.control = "RUN"
+  End Sub
+
+  ' Initializes the SDK and creates the NonceLoader
+  Function initNonceLoader() as Void
+    ' Loads the SDK on the current thread if it is not yet loaded.
+    If m.sdk = Invalid
+      m.sdk = new_imaSdk()
+    End If
+
+    m.top.nonceLoader = m.sdk.CreateNonceLoader()
+    ' Now that the nonceLoader exists, begin listening for nonce requests
+    m.top.observeField("getNonce", "requestNonce")
+  End Function
+
+  ' Requests a nonce from the IMA SDK.
+  Function requestNonce() as Void
+    nonceRequest = m.sdk.CreateNonceRequest()
+    m.top.nonceManager = m.top.nonceLoader.loadNonceManager(nonceRequest)
+    m.top.nonce = nonceManager.getNonce()
+
+    ' Now that the nonceManager is initialized, begin listening for impression requests
+    m.top.observeField("registerImpression", "registerImpression")
+  End Function
+
+  ' Registers an impression using the IMA SDK.
+  Function registerImpression() as Void
+    ' This resets the field that triggers this function, so you can register multiple impressions.
+    If m.top.registerImpression <> true
+      return
+    End If
+    m.top.registerImpression = false
+
+    m.top.nonceManager.sendAdImpression()
+  End Function
+
+]]>
+</script>
+</component>
