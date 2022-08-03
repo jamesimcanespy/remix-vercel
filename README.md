@@ -17,4 +17,3 @@ where ```{id}``` is the showcase identifier and ```{roku}``` is the unique roku 
 The application is configured with one or more Vimeo showcase entries then aggregates each DirectPublisher feed into a single aggregated feed. Each video in vimeo showcase has the showcase name added as a tag in the final aggregated feed to allow showcase names to be used as Roku categories.
 
 
-TEST UPDATE
