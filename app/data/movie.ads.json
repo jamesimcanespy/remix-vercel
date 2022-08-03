@@ -2,5 +2,6 @@
     { "movieTitle": "TEST VIDEO", "movieAdBreaks": [ "00:15:00", "00:30:00", "00:45:00" ] },
     { "movieTitle": "History of Omagh", "movieAdBreaks": [ "00:22:00", "00:31:00", "00:47:00" ] },
     { "movieTitle": "History - Homeplace of Alice Milligan", "movieAdBreaks": [ "00:18:00", "00:26:00", "00:33:00" ] },
-    { "movieTitle": "Editorial: Feck off Facebook", "movieAdBreaks": [ "00:13:00", "00:24:00", "00:29:00" ] }
+    { "movieTitle": "Editorial: Feck off Facebook", "movieAdBreaks": [ "00:13:00", "00:24:00", "00:29:00" ] },
+    { "movieTitle": "NEW MOVIE", "movieAdBreaks": [ "00:08:00", "00:12:00", "00:20:00" ] }
 ]
